@@ -1,18 +1,16 @@
+// src/api.js
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:4000/api';
-
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
 });
 
-// Test endpoints
 export const getTestQuestions = () => api.get('/test');
 export const submitTest = (answers) => api.post('/test/submit', { answers });
 
-// Admin endpoints
+// (admin endpoints if you need them)
 export const getAllQuestions = () => api.get('/questions');
-export const createQuestion = (questionData) => api.post('/questions', questionData);
-export const updateQuestion = (id, questionData) => api.put(`/questions/${id}`, questionData);
+export const createQuestion = (data) => api.post('/questions', data);
+export const updateQuestion = (id, data) => api.put(`/questions/${id}`, data);
 export const deleteQuestion = (id) => api.delete(`/questions/${id}`);
 export const getQuestion = (id) => api.get(`/questions/${id}`);

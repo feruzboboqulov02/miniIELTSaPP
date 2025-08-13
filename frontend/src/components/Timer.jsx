@@ -1,34 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
-const Timer = ({ onTimeUp, duration = 600 }) => { // 600 seconds = 10 minutes
+const Timer = ({ onTimeUp, duration = 600 }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      onTimeUp();
+      onTimeUp?.();
       return;
     }
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
+    const t = setInterval(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearInterval(t);
   }, [timeLeft, onTimeUp]);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  const mmss = useMemo(() => {
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }, [timeLeft]);
 
-  const isWarning = timeLeft <= 60; // Last minute warning
+  const pct = (1 - timeLeft / duration) * 100;
+  const danger = timeLeft <= 60;
 
   return (
-    <div className={`text-2xl font-bold p-4 rounded-lg border-2 ${
-      isWarning ? 'text-red-600 border-red-500 bg-red-50' : 'text-blue-600 border-blue-500 bg-blue-50'
-    }`}>
-      Time Left: {formatTime(timeLeft)}
+    <div className="flex items-center gap-3">
+      <div className="relative w-40 h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className={`absolute left-0 top-0 h-full ${danger ? 'bg-red-600' : 'bg-slate-900'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className={`font-mono text-sm ${danger ? 'text-red-700' : 'text-slate-900'}`}>{mmss}</span>
     </div>
   );
 };
