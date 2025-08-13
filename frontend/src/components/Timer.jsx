@@ -1,35 +1,37 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
-const Timer = ({ onTimeUp, duration = 600 }) => {
+const Timer = ({ onTimeUp, duration = 600, running = true }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
 
   useEffect(() => {
+    if (!running) return;
     if (timeLeft <= 0) {
-      onTimeUp?.();
+      onTimeUp();
       return;
     }
-    const t = setInterval(() => setTimeLeft(s => s - 1), 1000);
-    return () => clearInterval(t);
-  }, [timeLeft, onTimeUp]);
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, onTimeUp, running]);
 
-  const mmss = useMemo(() => {
-    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    const s = (timeLeft % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }, [timeLeft]);
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
-  const pct = (1 - timeLeft / duration) * 100;
-  const danger = timeLeft <= 60;
+  const isWarning = timeLeft <= 60;
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative w-40 h-2 bg-slate-200 rounded-full overflow-hidden">
-        <div
-          className={`absolute left-0 top-0 h-full ${danger ? 'bg-red-600' : 'bg-slate-900'}`}
-          style={{ width: `${pct}%` }}
-        />
+    <div className="fixed top-6 right-6 z-50">
+      <div
+        className={`text-2xl font-bold p-4 rounded-lg border-2 backdrop-blur-lg shadow-lg ${
+          isWarning
+            ? 'text-red-600 border-red-500 bg-red-200/40'
+            : 'text-blue-600 border-blue-500 bg-blue-200/40'
+        }`}
+      >
+        Time Left: {formatTime(timeLeft)}
       </div>
-      <span className={`font-mono text-sm ${danger ? 'text-red-700' : 'text-slate-900'}`}>{mmss}</span>
     </div>
   );
 };
