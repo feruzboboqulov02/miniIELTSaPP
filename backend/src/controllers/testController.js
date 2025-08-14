@@ -1,26 +1,27 @@
-const Question = require('../Models/Question');
+import Question from '../Models/Question.js';
 
-// GET /api/test - Get randomized questions for test (no correct answers shown)
-const getTestQuestions = async (req, res) => {
+// @desc    Get randomized questions for a test (without correct answers)
+// @route   GET /api/test
+// @access  Public
+export const getTestQuestions = async (req, res) => {
   try {
-    // Get all questions and randomize order
+    // Get all questions and randomize their order
     const questions = await Question.find();
     
     if (questions.length === 0) {
       return res.status(404).json({ error: 'No questions available' });
     }
 
-    // Shuffle questions for random order
+    // Shuffle the questions for a random order
     const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
 
-    // Remove correct answer information - only send text and _id for options
+    // Remove correct answer information before sending to the client
     const testQuestions = shuffledQuestions.map(question => ({
       _id: question._id,
       text: question.text,
       options: question.options.map(option => ({
         _id: option._id,
         text: option.text
-        // Don't include isCorrect in test questions
       }))
     }));
 
@@ -30,8 +31,10 @@ const getTestQuestions = async (req, res) => {
   }
 };
 
-// POST /api/test/submit - Submit test answers and get results
-const submitTest = async (req, res) => {
+// @desc    Submit test answers and get results
+// @route   POST /api/test/submit
+// @access  Public
+export const submitTest = async (req, res) => {
   try {
     const { answers } = req.body;
 
@@ -41,7 +44,7 @@ const submitTest = async (req, res) => {
       });
     }
 
-    // Validate answer format
+    // Validate the format of the answers
     for (const answer of answers) {
       if (!answer.questionId || !answer.optionId) {
         return res.status(400).json({ 
@@ -50,17 +53,17 @@ const submitTest = async (req, res) => {
       }
     }
 
-    // Get all questions to check answers
+    // Get the questions from the database to check the answers
     const questionIds = answers.map(a => a.questionId);
     const questions = await Question.find({ _id: { $in: questionIds } });
 
     if (questions.length !== answers.length) {
       return res.status(400).json({ 
-        error: 'Some questions not found' 
+        error: 'Some questions were not found' 
       });
     }
 
-    // Calculate results
+    // Calculate the test results
     let correctCount = 0;
     const breakdown = [];
 
@@ -73,7 +76,7 @@ const submitTest = async (req, res) => {
         });
       }
 
-      // Find the correct option
+      // Find the correct and chosen options
       const correctOption = question.options.find(opt => opt.isCorrect);
       const chosenOption = question.options.find(opt => opt._id.toString() === answer.optionId);
 
@@ -83,6 +86,7 @@ const submitTest = async (req, res) => {
         });
       }
 
+      // Check if the chosen answer is correct
       const isCorrect = correctOption._id.toString() === answer.optionId;
       if (isCorrect) correctCount++;
 
@@ -111,9 +115,4 @@ const submitTest = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};
-
-module.exports = {
-  getTestQuestions,
-  submitTest
 };

@@ -1,8 +1,8 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const questionRoutes = require('./routes/questionRoutes');
-const testRoutes = require('./routes/testRoutes');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import questionRoutes from './routes/questionRoutes.js';
+import testRoutes from './routes/testRoutes.js';
 
 const app = express();
 
@@ -25,7 +25,7 @@ app.use('/api/questions', questionRoutes); // Admin CRUD operations
 app.use('/api/test', testRoutes);          // User test operations
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('/:path', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
@@ -37,4 +37,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-module.exports = app;
+export default app;

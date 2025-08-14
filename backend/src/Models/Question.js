@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const optionSchema = new mongoose.Schema({
   text: {
@@ -32,7 +32,7 @@ const questionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Validate that exactly one option is correct
+// Validate that exactly one option is correct before saving
 questionSchema.pre('save', function(next) {
   const correctCount = this.options.filter(option => option.isCorrect).length;
   if (correctCount !== 1) {
@@ -41,4 +41,6 @@ questionSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Question', questionSchema);
+const Question = mongoose.model('Question', questionSchema);
+
+export default Question;
