@@ -1,28 +1,40 @@
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db.js';
-import questionRoutes from './routes/questionRoutes.js';
-import testRoutes from './routes/testRoutes.js';
-
-dotenv.config();
-await connectDB();
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const questionRoutes = require('./routes/questionRoutes');
+const testRoutes = require('./routes/testRoutes');
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
-
-app.use('/api/questions', questionRoutes); // Admin CRUD
-app.use('/api/test', testRoutes);          // User test start/submit
-
-// Global error handler
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Server error' });
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'IELTS Mock Test API is running',
+    timestamp: new Date().toISOString()
+  });
 });
 
-export default app;
+// Routes
+app.use('/api/questions', questionRoutes); // Admin CRUD operations
+app.use('/api/test', testRoutes);          // User test operations
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Internal server error' 
+  });
+});
+
+module.exports = app;
